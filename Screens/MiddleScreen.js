@@ -4,7 +4,7 @@ import React from "react";
 const GoalScreen = () => {
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>GoalScreen!</Text>
+      <Text>Middle Screen!</Text>
     </View>
   );
 };

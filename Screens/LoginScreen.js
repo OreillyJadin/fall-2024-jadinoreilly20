@@ -48,7 +48,6 @@ const LoginScreen = ({ navigation }) => {
           value={email}
           onChangeText={(text) => setEmail(text)}
         />
-
         <Input
           placeholder="Password"
           secureTextEntry
