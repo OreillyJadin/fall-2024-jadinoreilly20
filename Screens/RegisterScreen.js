@@ -32,7 +32,7 @@ const RegisterScreen = ({ navigation }) => {
         console.error(`Error [${errorCode}]: ${errorMessage}`);
       });
   };*/
-
+  /* 9-25-24 1pm trying this handleRegister instead
   //should i have const register = async () => {??
   const register = () => {
     createUserWithEmailAndPassword(auth, email, password)
@@ -41,6 +41,18 @@ const RegisterScreen = ({ navigation }) => {
       })
       .catch((error) => alert(error.message));
     console.log("Inside register!");
+  };*/
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      auth.currentUser.displayName = name;
+      const user = auth.currentUser;
+      console.log("User Registered: ", user.displayName);
+    } catch (error) {
+      console.log(error.message);
+    }
   };
 
   return (
@@ -73,7 +85,7 @@ const RegisterScreen = ({ navigation }) => {
         />
       </View>
       <Button
-        onPress={register}
+        onPress={handleRegister}
         containerStyle={styles.button}
         title="Register"
         buttonStyle={{ backgroundColor: "black" }}

@@ -25,8 +25,6 @@ const LoginScreen = ({ navigation }) => {
 
     return unSub;
   }, []);
-
-  const signIn = () => {};
   /*
   async function handleSubmit() {
     if (email && password) {
@@ -37,6 +35,17 @@ const LoginScreen = ({ navigation }) => {
       }
     }
   }*/
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      const user = auth.currentUser;
+      console.log("User Logged In: ", user.displayName);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.container}>
       <StatusBar style="light" />
@@ -58,7 +67,7 @@ const LoginScreen = ({ navigation }) => {
       </View>
       <Button
         containerStyle={styles.button}
-        onPress={signIn}
+        onPress={handleLogin}
         title="Login"
         buttonStyle={{ backgroundColor: "black" }}
         titleStyle={{ color: "white" }}

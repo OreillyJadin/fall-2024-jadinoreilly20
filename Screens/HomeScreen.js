@@ -7,13 +7,13 @@ import ProfileScreen from "./ProfileScreen";
 import MiddleScreen from "./MiddleScreen";
 
 const Tab = createBottomTabNavigator();
-//How am i supposed to have an tab navigator in a stack navigator?
+
 const HomeScreen = () => {
   return (
     <Tab.Navigator>
       <Tab.Screen name="Goals" component={GoalScreen} />
       <Tab.Screen name="Middle" component={MiddleScreen} />
-      <Tab.Screen name="Johnnny" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
