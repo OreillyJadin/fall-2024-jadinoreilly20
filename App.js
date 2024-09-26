@@ -24,14 +24,32 @@ const globalScreenOptions = {
   headerTitleStyle: { color: "white" },
   headerTintColor: "white",
 };
-
+//
 export default function App() {
+  /*
+  {isLoggedIn ? (
+  // Screens for logged in users
+  <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ headerShown: false }}
+        />
+  ) : (
+  //Auth Screens
+          <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+)}
+        */
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={globalScreenOptions}>
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

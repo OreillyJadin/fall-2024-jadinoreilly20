@@ -12,12 +12,15 @@ import { Button, Input } from "react-native-elements";
 import { StatusBar } from "expo-status-bar";
 
 const LoginScreen = ({ navigation }) => {
-  //const navigation = useNavigation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   useEffect(() => {
     const unSub = auth.onAuthStateChanged((authUser) => {
+      console.log(
+        "LoginScreen - UseEffect() Navigating to Home:",
+        authUser.displayName
+      );
       if (authUser) {
         navigation.replace("Home");
       }
@@ -25,22 +28,16 @@ const LoginScreen = ({ navigation }) => {
 
     return unSub;
   }, []);
-  /*
-  async function handleSubmit() {
-    if (email && password) {
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        console.log("got error: ", err.messsage);
-      }
-    }
-  }*/
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
       const user = auth.currentUser;
-      console.log("User Logged In: ", user.displayName);
+      console.log(
+        "LoginScreen - handleLogin() User Logged In: ",
+        user.displayName
+      );
     } catch (error) {
       console.log(error.message);
     }

@@ -4,8 +4,9 @@ import { useNavigation } from "@react-navigation/native";
 import { Button, Input } from "react-native-elements";
 import { StatusBar } from "expo-status-bar";
 import { KeyboardAvoidingView } from "react-native";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -17,31 +18,6 @@ const RegisterScreen = ({ navigation }) => {
       headerBackTitle: "Login",
     });
   }, [navigation]);
-  /*
-  // Create user
-  const signUp = (email, password) => {
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed in
-        const user = userCredential.user;
-        console.log("User created:", user);
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.error(`Error [${errorCode}]: ${errorMessage}`);
-      });
-  };*/
-  /* 9-25-24 1pm trying this handleRegister instead
-  //should i have const register = async () => {??
-  const register = () => {
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        console.log("User created!");
-      })
-      .catch((error) => alert(error.message));
-    console.log("Inside register!");
-  };*/
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -49,7 +25,14 @@ const RegisterScreen = ({ navigation }) => {
       await createUserWithEmailAndPassword(auth, email, password);
       auth.currentUser.displayName = name;
       const user = auth.currentUser;
+      if (user) {
+        await setDoc(doc(db, "Users", user.uid), {
+          email: user.email,
+          displayName: name,
+        });
+      }
       console.log("User Registered: ", user.displayName);
+      //toast.success("User Register: ") This will alert the user 
     } catch (error) {
       console.log(error.message);
     }
