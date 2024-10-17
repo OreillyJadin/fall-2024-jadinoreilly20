@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { Button } from "react-native-elements";
-import LoginScreen from "./LoginScreen";
+
 const ProfileScreen = ({ navigation }) => {
   const [userDetails, setUserDetails] = useState(null);
 
