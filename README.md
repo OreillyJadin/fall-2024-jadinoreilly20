@@ -1,4 +1,6 @@
 # fall.2024.jadinoreilly20
+Using Expo not React Native CLI
+
 
 Users (collection)
 .|___userID( document)

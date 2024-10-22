@@ -4,12 +4,15 @@ import {
   View,
   TextInput,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { Button, Input } from "react-native-elements";
 import { StatusBar } from "expo-status-bar";
+import Toast from "react-native-toast-message";
+import { handleAuthError } from "../error";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -34,12 +37,24 @@ const LoginScreen = ({ navigation }) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       const user = auth.currentUser;
+      /*
       console.log(
         "LoginScreen - handleLogin() User Logged In: ",
         user.displayName
-      );
+      );*/
+      Toast.show({
+        type: "success",
+        text1: "Login Successfull",
+        text2: `Welcome back, ${user.displayName}!`,//Might not work, change back to welcome back
+      });
     } catch (error) {
+      const errorMessage = handleAuthError(error);
       console.log(error.message);
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: errorMessage,
+      });
     }
   };
 

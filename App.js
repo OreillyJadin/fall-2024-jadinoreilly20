@@ -15,8 +15,8 @@ import HomeScreen from "./Screens/HomeScreen";
 import AppNavigation from "./navigation/appNavigation";
 import LoginScreen from "./Screens/LoginScreen";
 import RegisterScreen from "./Screens/RegisterScreen";
+import Toast from "react-native-toast-message";
 
-//const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const globalScreenOptions = {
@@ -26,7 +26,34 @@ const globalScreenOptions = {
 };
 //
 export default function App() {
-  /*
+  return (
+    <>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={globalScreenOptions}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+      <Toast />
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f2f2f2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
+
+/* AUTH FOR SCREENS??????
   {isLoggedIn ? (
   // Screens for logged in users
   <Stack.Screen
@@ -40,29 +67,6 @@ export default function App() {
         <Stack.Screen name="Register" component={RegisterScreen} />
 )}
         */
-  return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={globalScreenOptions}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f2f2f2",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
 
 /* // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";

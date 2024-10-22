@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Alert } from "react-native";
 import React, { useLayoutEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { Button, Input } from "react-native-elements";
@@ -7,6 +7,8 @@ import { KeyboardAvoidingView } from "react-native";
 import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { setDoc, doc } from "firebase/firestore";
+import Toast from "react-native-toast-message";
+import { handleAuthError } from "../error";
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -32,9 +34,20 @@ const RegisterScreen = ({ navigation }) => {
         });
       }
       console.log("User Registered: ", user.displayName);
-      //toast.success("User Register: ") This will alert the user 
+      //toast.success("User Register: ") This will alert the user
+            Toast.show({
+              type: "success",
+              text1: "Register Successfull",
+              text2: `Welcome, ${user.displayName}!`,
+            });
     } catch (error) {
+      const errorMessage = handleAuthError(error);
       console.log(error.message);
+            Toast.show({
+              type: "error",
+              text1: "Login Failed",
+              text2: errorMessage,
+            });
     }
   };
 
