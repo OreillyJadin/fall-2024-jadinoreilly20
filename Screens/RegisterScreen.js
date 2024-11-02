@@ -35,19 +35,19 @@ const RegisterScreen = ({ navigation }) => {
       }
       console.log("User Registered: ", user.displayName);
       //toast.success("User Register: ") This will alert the user
-            Toast.show({
-              type: "success",
-              text1: "Register Successfull",
-              text2: `Welcome, ${user.displayName}!`,
-            });
+      Toast.show({
+        type: "success",
+        text1: "Register Successfull",
+        text2: `Welcome, ${user.displayName}!`,
+      });
     } catch (error) {
       const errorMessage = handleAuthError(error);
       console.log(error.message);
-            Toast.show({
-              type: "error",
-              text1: "Login Failed",
-              text2: errorMessage,
-            });
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: errorMessage,
+      });
     }
   };
 
