@@ -7,11 +7,20 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
-import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { CheckBox, Icon } from "react-native-elements";
 import moment from "moment";
+import useStreak from "../components/useStreak";
 
 export default function GoalScreen() {
+  const streak = useStreak();
   const [currentDate, setCurrentDate] = useState(moment());
   const [daysInMonth, setDaysInMonth] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -20,6 +29,7 @@ export default function GoalScreen() {
   );
   const [taskCounts, setTaskCounts] = useState({});
 
+  // Generate the calendar and fetch monthly tasks whenever currentDate changes
   useEffect(() => {
     generateCalendar();
     fetchMonthlyTasks();
@@ -111,8 +121,19 @@ export default function GoalScreen() {
     return "#FF6347"; // Less than half completed (red)
   };
 
+  // Toggle completion of a task
+  const toggleComplete = async (taskId, currentStatus) => {
+    const user = auth.currentUser;
+    const taskRef = doc(db, "Users", user.uid, "tasks", taskId);
+    await updateDoc(taskRef, { completed: !currentStatus });
+  };
+
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Progress</Text>
+        <Text style={styles.streakText}>🔥 {streak} </Text>
+      </View>
       <View style={styles.monthHeader}>
         <Icon
           name="arrow-left"
@@ -161,16 +182,24 @@ export default function GoalScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.taskItem}>
-              <CheckBox
-                checked={item.completed}
-                onPress={() => toggleComplete(item.id, item.completed)}
-              />
+              {selectedDate === moment().format("YYYY-MM-DD") ? (
+                // Use checkbox for today's tasks
+                <CheckBox
+                  checked={item.completed}
+                  onPress={() => toggleComplete(item.id, item.completed)}
+                  containerStyle={{ margin: 0, padding: 0 }}
+                />
+              ) : (
+                // Use green check or red X for past dates
+                <Icon
+                  style={styles.taskIcon}
+                  name={item.completed ? "check-circle" : "times-circle"}
+                  type="font-awesome"
+                  color={item.completed ? "green" : "red"}
+                  size={24}
+                />
+              )}
               <Text style={styles.taskText}>{item.text}</Text>
-              <Icon
-                name="trash"
-                type="font-awesome"
-                onPress={() => deleteTask(item.id)}
-              />
             </View>
           )}
         />
@@ -185,6 +214,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    //paddingTop: 10,
   },
   monthHeader: {
     flexDirection: "row",
@@ -213,8 +243,8 @@ const styles = StyleSheet.create({
   dayContainer: {
     width: "13%",
     alignItems: "center",
-    padding: 8,
-    marginVertical: 5,
+    padding: 9,
+    marginVertical: 3,
   },
   currentDay: {
     backgroundColor: "#007AFF",
@@ -230,36 +260,46 @@ const styles = StyleSheet.create({
   taskItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderColor: "#ddd",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginVertical: 4,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  taskIcon: {
+    marginRight: 12,
   },
   taskText: {
     flex: 1,
     fontSize: 16,
+    color: "#333",
+  },
+  header: {
+    backgroundColor: "#f8f8f8",
+    paddingVertical: 35,
+    paddingHorizontal: 16,
+    marginBottom: 15, //Space between monthHeader
+    alignItems: "center",
+    flexDirection: "row",
+    //alignItems: "flex-end",
+    //justifyContent: "space-between",
+    //shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    //shadowOffset: { width: 0, height: 2 },
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+    flex: 1, // This ensures the text takes up available space to center-align
+  },
+  streakText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FF6347", // Matching color of flame emoji
   },
 });
-
-/*
-const fetchTasksForDate = () => {
-    const user = auth.currentUser;
-    if (user) {
-      const tasksQuery = query(
-        collection(db, "Users", user.uid, "tasks"),
-        where("date", "==", selectedDate)
-      );
-      onSnapshot(tasksQuery, (querySnapshot) => {
-        const fetchedTasks = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setTasks(fetchedTasks);
-      });
-    } else {
-      console.log("User is not logged in.");
-    }
-  };
-
-  useEffect(() => {
-    fetchTasksForDate();
-  }, [selectedDate]); */
