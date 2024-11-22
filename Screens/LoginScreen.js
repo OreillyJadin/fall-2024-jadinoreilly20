@@ -20,15 +20,10 @@ const LoginScreen = ({ navigation }) => {
 
   useEffect(() => {
     const unSub = auth.onAuthStateChanged((authUser) => {
-      console.log(
-        "LoginScreen - UseEffect() Navigating to Home:",
-        authUser.displayName
-      );
       if (authUser) {
         navigation.replace("Home");
       }
     });
-
     return unSub;
   }, []);
 
@@ -45,7 +40,7 @@ const LoginScreen = ({ navigation }) => {
       Toast.show({
         type: "success",
         text1: "Login Successfull",
-        text2: `Welcome back, ${user.displayName}!`,//Might not work, change back to welcome back
+        text2: `Welcome back!`,
       });
     } catch (error) {
       const errorMessage = handleAuthError(error);

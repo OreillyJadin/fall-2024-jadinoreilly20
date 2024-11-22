@@ -1,10 +1,8 @@
-import { initializeApp } from "firebase/app"; //GG
+import { initializeApp } from "firebase/app";
+//getReactNativePersistence
+//install @react-native-async-storage/async-storage
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-/*/ Error message told me to do this 
-import { initializeAuth, getReactNativePersistence } from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-*/
 
 const firebaseConfig = {
   apiKey: "AIzaSyAHQEnhUuzdzk3uhNq9-J0XReXpJg-mxjA",
@@ -16,14 +14,9 @@ const firebaseConfig = {
   measurementId: "G-B94FHR3SE9",
 };
 
-const app = initializeApp(firebaseConfig); //GG
-/*/Error message told me to do this
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-});
-*/
+const app = initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
-const db = getFirestore(app); //GG
+const db = getFirestore(app);
 
 export { db, auth };
-//export { auth };

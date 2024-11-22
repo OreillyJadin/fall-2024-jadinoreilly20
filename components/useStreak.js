@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 function useStreak() {
   const [streak, setStreak] = useState(0);
-
+  //ormat lastActiveDate as DD-MM-YYYY
   useEffect(() => {
     const updateStreak = async () => {
       const user = auth.currentUser;

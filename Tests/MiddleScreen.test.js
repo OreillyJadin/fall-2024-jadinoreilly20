@@ -1,62 +1,92 @@
-// Tests/MiddleScreen.test.js
-/*
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import MiddleScreen from "../Screens/MiddleScreen"; // Adjust this path as needed
-import { auth, db } from "../firebase"; // Mock firebase as needed
+import MiddleScreen from "../Screens/MiddleScreen";
+import { auth, db } from "../firebase";
 import moment from "moment";
 
-jest.mock("../firebase", () => ({
-  auth: { currentUser: { uid: "testUser" } },
-  db: jest.fn(),
-}));
-
-describe("MiddleScreen", () => {
-  it("renders correctly with initial state", () => {
+describe("MiddleScreen Component", () => {
+  // Week View Rendering GOOD
+  it("renders the week view correctly", () => {
     const { getByText } = render(<MiddleScreen />);
-    expect(getByText(`No tasks for ${moment().format("dddd")}`)).toBeTruthy();
+    expect(getByText("Sun")).toBeTruthy();
+    expect(getByText("Mon")).toBeTruthy();
+    expect(getByText("Tue")).toBeTruthy();
+    expect(getByText("Wed")).toBeTruthy();
+    expect(getByText("Thu")).toBeTruthy();
+    expect(getByText("Fri")).toBeTruthy();
+    expect(getByText("Sat")).toBeTruthy();
   });
+  //Adding a Task FAILED
+  it("allows adding a task", async () => {
+    const { getByPlaceholderText, getByText, getAllByText } = render(
+      <MiddleScreen />
+    );
 
-  it("displays tasks for selected day", async () => {
-    const { getByText } = render(<MiddleScreen />);
-    await waitFor(() => expect(getByText("Task 1")).toBeTruthy());
-  });
-
-  it("adds a new task", async () => {
-    const { getByPlaceholderText, getByText } = render(<MiddleScreen />);
+    // Input new task
     const input = getByPlaceholderText("Enter new task");
-    fireEvent.changeText(input, "New Task");
-    fireEvent.press(getByText("Add Task"));
-    await waitFor(() => expect(getByText("New Task")).toBeTruthy());
+    const addButton = getByText("Add Task");
+
+    fireEvent.changeText(input, "Test Task");
+    fireEvent.press(addButton);
+
+    // Check if the task is added
+    await waitFor(() =>
+      expect(getAllByText("Test Task").length).toBeGreaterThan(0)
+    );
   });
 
-  it("deletes a task", async () => {
-    const { getByText, queryByText } = render(<MiddleScreen />);
-    fireEvent.press(getByText("Delete"));
-    await waitFor(() => expect(queryByText("Task 1")).toBeNull());
+  //GOOD
+  it("shows no tasks message when there are no tasks", () => {
+    const { getByText } = render(<MiddleScreen />);
+
+    // Check for "No tasks" message
+    expect(getByText(/No tasks for/i)).toBeTruthy();
   });
 
-  it("toggles task completion", async () => {
-    const { getByTestId } = render(<MiddleScreen />);
-    const checkbox = getByTestId("checkbox-task1");
-    fireEvent.press(checkbox);
-    await waitFor(() => expect(checkbox.props.checked).toBe(true));
-  });
+    //FAILED
+  it("allows marking a task as complete", async () => {
+    const { getByPlaceholderText, getByText, getAllByRole } = render(
+      <MiddleScreen />
+    );
 
-  it("changes task priority", async () => {
-    const { getByTestId } = render(<MiddleScreen />);
-    const priorityButton = getByTestId("priority-task1");
-    fireEvent.press(priorityButton);
-    await waitFor(() => expect(priorityButton.props.color).toBe("orange"));
-  });
+    // Add a task first
+    const input = getByPlaceholderText("Enter new task");
+    const addButton = getByText("Add Task");
 
-  it("sets notification time for a task", async () => {
-    const { getByText, getByTestId } = render(<MiddleScreen />);
-    fireEvent.press(getByText("Set Notification"));
-    fireEvent(getByTestId("time-picker"), "onChange", {
-      nativeEvent: { timestamp: new Date() },
+    fireEvent.changeText(input, "Task to Complete");
+    fireEvent.press(addButton);
+
+    // Check for the checkbox
+    //Looking into where our task actually is
+    await waitFor(() => {
+      const checkboxes = getAllByRole("checkbox");
+      fireEvent.press(checkboxes[0]);
+
+      // Checkbox works?
+      expect(checkboxes[0].props.accessibilityState.checked).toBeTruthy();
     });
-    await waitFor(() => expect(getByText(/Time Set/)).toBeTruthy());
+  });
+
+//FAILED
+  it("allows deleting a task", async () => {
+    const { getByPlaceholderText, getByText, queryByText } = render(
+      <MiddleScreen />
+    );
+
+    // Add a task first
+    const input = getByPlaceholderText("Enter new task");
+    const addButton = getByText("Add Task");
+
+    fireEvent.changeText(input, "Task to Delete");
+    fireEvent.press(addButton);
+
+    // Delete the task
+    const deleteButton = getByText("Task to Delete").parent.find(
+      (node) => node.type === "Icon" && node.props.name === "trash"
+    );
+    fireEvent.press(deleteButton);
+
+    // Check if the task is deleted
+    await waitFor(() => expect(queryByText("Task to Delete")).toBeNull());
   });
 });
-*/

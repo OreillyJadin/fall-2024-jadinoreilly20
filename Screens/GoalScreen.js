@@ -276,6 +276,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
+
   header: {
     backgroundColor: "#f8f8f8",
     paddingVertical: 35,
@@ -289,6 +290,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
     //shadowOffset: { width: 0, height: 2 },
+    width: "100%",
   },
   headerText: {
     fontSize: 24,

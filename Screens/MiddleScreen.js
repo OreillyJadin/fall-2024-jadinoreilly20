@@ -35,12 +35,12 @@ export default function MiddleScreen() {
   const [newTask, setNewTask] = useState("");
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingText, setEditingText] = useState("");
-  ///* Nov 6 - Notification implementation - Oreilly
+  /* Nov 6 - Notification implementation - Oreilly
   //Notification/Priority States
   const [notificationTime, setNotificationTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  // */
+  */
   useEffect(() => {
     fetchTasksForDate();
   }, [selectedDate]);
@@ -89,7 +89,7 @@ export default function MiddleScreen() {
     setSelectedTaskId(taskId);
     setShowTimePicker(true);
   };
-
+/*
   // Handle time picker
   // Updated onTimeChange function to save the notification time to Firestore
   const onTimeChange = async (event, selectedTime) => {
@@ -114,7 +114,7 @@ export default function MiddleScreen() {
     }
   };
 
-  //*/
+  */
   // Toggle completion of a task
   const toggleComplete = async (taskId, currentStatus) => {
     const user = auth.currentUser;
@@ -250,6 +250,7 @@ export default function MiddleScreen() {
           containerStyle={styles.icon}
         />
       </View>
+      {/* Nov 6 - Notification implementation - Oreilly 
       {showTimePicker && selectedTaskId === item.id && (
         <DateTimePicker
           value={notificationTime || new Date()}
@@ -258,6 +259,7 @@ export default function MiddleScreen() {
           onChange={onTimeChange}
         />
       )}
+        */}
     </View>
   );
 
