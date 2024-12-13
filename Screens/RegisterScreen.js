@@ -21,8 +21,7 @@ const RegisterScreen = ({ navigation }) => {
     });
   }, [navigation]);
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  const handleRegister = async () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       auth.currentUser.displayName = name;
@@ -31,6 +30,11 @@ const RegisterScreen = ({ navigation }) => {
         await setDoc(doc(db, "Users", user.uid), {
           email: user.email,
           displayName: name,
+          bio: "This is my bio.",
+          location: "Green Bay, WI",
+          mainGoal: "100 Day Streak",
+          birthday: "06/12/2002",
+          //birthday: new Date(),
         });
       }
       console.log("User Registered: ", user.displayName);

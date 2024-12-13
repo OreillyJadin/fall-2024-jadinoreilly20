@@ -56,6 +56,9 @@ const LoginScreen = ({ navigation }) => {
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.container}>
       <StatusBar style="light" />
+      <Text h3 style={{ marginBottom: 50 }}>
+        Login with your credentials
+      </Text>
       <View style={styles.inputContainer}>
         <Input
           placeholder="Email"

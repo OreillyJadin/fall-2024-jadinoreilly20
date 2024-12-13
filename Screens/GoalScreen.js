@@ -14,6 +14,7 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  orderBy,
 } from "firebase/firestore";
 import { CheckBox, Icon } from "react-native-elements";
 import moment from "moment";
@@ -41,71 +42,88 @@ export default function GoalScreen() {
   }, [selectedDate]);
 
   const generateCalendar = () => {
-    const startOfMonth = currentDate.clone().startOf("month");
-    const endOfMonth = currentDate.clone().endOf("month");
-    const calendarDays = [];
-    let day = startOfMonth.clone().startOf("week");
+    try {
+      const startOfMonth = currentDate.clone().startOf("month");
+      const endOfMonth = currentDate.clone().endOf("month");
+      const calendarDays = [];
+      let day = startOfMonth.clone().startOf("week");
 
-    while (day.isBefore(endOfMonth, "day") || day.weekday() !== 0) {
-      calendarDays.push(day.clone());
-      day.add(1, "day");
+      while (day.isBefore(endOfMonth, "day") || day.weekday() !== 0) {
+        calendarDays.push(day.clone());
+        day.add(1, "day");
+      }
+      setDaysInMonth(calendarDays);
+    } catch (error) {
+      console.error("Error generating calendar:", error);
     }
-    setDaysInMonth(calendarDays);
   };
 
   const fetchMonthlyTasks = () => {
     const user = auth.currentUser;
     if (user) {
       // Fetch tasks from the previous month and the next month to fit calendar screen
-      const monthStart = currentDate
-        .clone()
-        .startOf("month")
-        .subtract(7, "days")
-        .format("YYYY-MM-DD");
-      const monthEnd = currentDate
-        .clone()
-        .endOf("month")
-        .add(7, "days")
-        .format("YYYY-MM-DD");
+      try {
+        const monthStart = currentDate
+          .clone()
+          .startOf("month")
+          .subtract(7, "days")
+          .format("YYYY-MM-DD");
+        const monthEnd = currentDate
+          .clone()
+          .endOf("month")
+          .add(7, "days")
+          .format("YYYY-MM-DD");
 
-      const tasksQuery = query(
-        collection(db, "Users", user.uid, "tasks"),
-        where("date", ">=", monthStart),
-        where("date", "<=", monthEnd)
-      );
+        const tasksQuery = query(
+          collection(db, "Users", user.uid, "tasks"),
+          where("date", ">=", monthStart),
+          where("date", "<=", monthEnd)
+        );
 
-      onSnapshot(tasksQuery, (querySnapshot) => {
-        const fetchedTasks = {};
-        querySnapshot.docs.forEach((doc) => {
-          const task = doc.data();
-          const date = task.date;
-          if (!fetchedTasks[date]) {
-            fetchedTasks[date] = { total: 0, completed: 0 };
-          }
-          fetchedTasks[date].total += 1;
-          if (task.completed) fetchedTasks[date].completed += 1;
+        onSnapshot(tasksQuery, (querySnapshot) => {
+          const fetchedTasks = {};
+          querySnapshot.docs.forEach((doc) => {
+            const task = doc.data();
+            const date = task.date;
+            if (!fetchedTasks[date]) {
+              fetchedTasks[date] = { total: 0, completed: 0 };
+            }
+            fetchedTasks[date].total += 1;
+            if (task.completed) fetchedTasks[date].completed += 1;
+          });
+          setTaskCounts(fetchedTasks);
         });
-        setTaskCounts(fetchedTasks);
-      });
+      } catch (error) {
+        console.log("Error fetching monthly tasks:", error);
+      }
+    } else {
+      console.log("User is not logged in.");
+      return;
     }
   };
 
   const fetchTasksForDate = () => {
     const user = auth.currentUser;
     if (user) {
-      const tasksQuery = query(
-        collection(db, "Users", user.uid, "tasks"),
-        where("date", "==", selectedDate)
-      );
-      onSnapshot(tasksQuery, (querySnapshot) => {
-        const fetchedTasks = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setTasks(fetchedTasks);
-      });
+      try {
+        const tasksQuery = query(
+          collection(db, "Users", user.uid, "tasks"),
+          where("date", "==", selectedDate),
+          orderBy("priority", "desc")
+        );
+        onSnapshot(tasksQuery, (querySnapshot) => {
+          const fetchedTasks = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setTasks(fetchedTasks);
+        });
+      } catch (error) {
+        console.log("Error fetching tasks for date:", error);
+      }
     } else {
       console.log("User is not logged in.");
+      return;
     }
   };
 
@@ -141,12 +159,16 @@ export default function GoalScreen() {
           onPress={() =>
             setCurrentDate((prev) => prev.clone().subtract(1, "month"))
           }
+          accessibilityRole="button"
+          accessibilityLabel="arrow-left"
         />
         <Text style={styles.monthText}>{currentDate.format("MMMM YYYY")}</Text>
         <Icon
           name="arrow-right"
           type="font-awesome"
           onPress={() => setCurrentDate((prev) => prev.clone().add(1, "month"))}
+          accessibilityRole="button"
+          accessibilityLabel="arrow-right"
         />
       </View>
 
@@ -162,6 +184,7 @@ export default function GoalScreen() {
         {daysInMonth.map((day) => (
           <TouchableOpacity
             key={day.format("YYYY-MM-DD")}
+            testID={`day-${day.format("YYYY-MM-DD")}`}
             style={[
               styles.dayContainer,
               { backgroundColor: getDayColor(day) },
@@ -278,8 +301,8 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: "#f8f8f8",
-    paddingVertical: 35,
+    //backgroundColor: "#f8f8f8",
+    //paddingVertical: 35,
     paddingHorizontal: 16,
     marginBottom: 15, //Space between monthHeader
     alignItems: "center",
@@ -287,17 +310,17 @@ const styles = StyleSheet.create({
     //alignItems: "flex-end",
     //justifyContent: "space-between",
     //shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
     //shadowOffset: { width: 0, height: 2 },
     width: "100%",
+    //borderWidth: 1, //----------For Testing
+    //borderColor: "red", //----------For Testing
   },
   headerText: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#333",
     textAlign: "center",
-    flex: 1, // This ensures the text takes up available space to center-align
+    flex: 1, 
   },
   streakText: {
     fontSize: 20,

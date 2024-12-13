@@ -14,17 +14,22 @@ import {
   collection,
   query,
   where,
+  orderBy,
   onSnapshot,
   doc,
   updateDoc,
   deleteDoc,
   addDoc,
+  setDoc,
+  getDoc,
+  getDocs,
 } from "firebase/firestore";
 import { CheckBox, Icon } from "react-native-elements";
 import Toast from "react-native-toast-message";
 import moment from "moment";
-import DateTimePicker from "@react-native-community/datetimepicker";
+//import DateTimePicker from "@react-native-community/datetimepicker";
 //GOOGLE @react-native-community/datetimepicker AND INSTALL? THEN TEST CODE
+import { RecurringOverlay } from "../components/RecurringOverlay";
 
 export default function MiddleScreen() {
   const [currentWeek, setCurrentWeek] = useState([]);
@@ -35,6 +40,56 @@ export default function MiddleScreen() {
   const [newTask, setNewTask] = useState("");
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingText, setEditingText] = useState("");
+
+  //Recurring Overlay
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [currentTaskId, setCurrentTaskId] = useState(null);
+
+  const openRecurringModal = (taskId) => {
+    setCurrentTaskId(taskId);
+    setShowOverlay(true);
+  };
+
+  const saveRecurringDetails = async (recurringType) => {
+    setShowOverlay(false);
+    if (currentTaskId) {
+      try {
+        const user = auth.currentUser;
+
+        if (user) {
+          const taskRef = doc(db, "Users", user.uid, "tasks", currentTaskId);
+          console.log("Task ID:", currentTaskId, "isRecurring:", recurringType);
+
+          if (recurringType === "None") {
+            await setDoc(
+              taskRef,
+              {
+                recurring: {
+                  isRecurring: false,
+                  type: null,
+                },
+              },
+              { merge: true }
+            );
+          } else {
+            await setDoc(
+              taskRef,
+              {
+                recurring: {
+                  isRecurring: true,
+                  type: recurringType, // Daily, Weekly, Bi-Weekly, or Monthly
+                },
+              },
+              { merge: true }
+            );
+          }
+          console.log("Recurring details saved:", recurringType);
+        }
+      } catch (error) {
+        console.error("Error saving recurring details:", error);
+      }
+    }
+  };
   /* Nov 6 - Notification implementation - Oreilly
   //Notification/Priority States
   const [notificationTime, setNotificationTime] = useState(new Date());
@@ -46,22 +101,27 @@ export default function MiddleScreen() {
   }, [selectedDate]);
 
   // Fetch tasks for the selected date
-  const fetchTasksForDate = () => {
+  const fetchTasksForDate = async () => {
     const user = auth.currentUser;
     if (user) {
       const tasksQuery = query(
         collection(db, "Users", user.uid, "tasks"),
-        where("date", "==", selectedDate)
+        where("date", "==", selectedDate),
+        orderBy("priority", "desc")
       );
-      onSnapshot(tasksQuery, (querySnapshot) => {
+
+      onSnapshot(tasksQuery, async (querySnapshot) => {
         const fetchedTasks = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setTasks(fetchedTasks);
+
+        // Ensure recurring tasks are updated for today
+        await handleRecurringTasks(user.uid, fetchedTasks);
+
+        //setTasks(fetchedTasks);
+        setTasks(fetchedTasks.filter((task) => task.date === selectedDate));
       });
-    } else {
-      console.log("User is not logged in - MiddleScreen.");
     }
   };
 
@@ -89,7 +149,7 @@ export default function MiddleScreen() {
     setSelectedTaskId(taskId);
     setShowTimePicker(true);
   };
-/*
+  /*
   // Handle time picker
   // Updated onTimeChange function to save the notification time to Firestore
   const onTimeChange = async (event, selectedTime) => {
@@ -129,7 +189,7 @@ export default function MiddleScreen() {
     await deleteDoc(taskRef);
   };
 
-  // Function to add a new task
+  // Add a new task
   const addTask = async () => {
     const user = auth.currentUser;
     const tasksRef = collection(db, "Users", user.uid, "tasks"); // Reference to the user's tasks subcollection
@@ -140,6 +200,11 @@ export default function MiddleScreen() {
         completed: false,
         date: moment().format("YYYY-MM-DD"),
         priority: 1,
+        recurring: {
+          isRecurring: false,
+          type: null,
+        },
+        lastRecurringDate: new Date(),
       });
       setNewTask(""); // Reset the input field after adding
     } else {
@@ -151,7 +216,7 @@ export default function MiddleScreen() {
     }
   };
 
-  // Function to save the edited task
+  // Save the edited task
   const saveEditedTask = async (taskId) => {
     const user = auth.currentUser;
     const taskRef = doc(db, "Users", user.uid, "tasks", taskId); // Reference to the specific task
@@ -164,6 +229,73 @@ export default function MiddleScreen() {
  
  Need to render/query tasks by 1.priority level 2. notificationTime 13:00 higher than 14:00.  Oreilly
  */
+  useEffect(() => {
+    const updateTasks = async () => {
+      await handleRecurringTasks();
+    };
+    updateTasks();
+  }, []);
+
+  const handleRecurringTasks = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const today = moment().startOf("day");
+    const userDoc = doc(db, "Users", user.uid); //ref to doc
+    const userSnapshot = await getDoc(userDoc); //fetches doc
+
+    if (userSnapshot.exists()) {
+      const tasks = userSnapshot.data().tasks || [];
+
+      const updatedTasks = tasks.map((task) => {
+        if (task.recurring?.isRecurring) {
+          const lastRecurringDate = moment(task.lastRecurringDate?.toDate());
+          const taskCopy = { ...task };
+
+          if (
+            task.recurring.type === "Daily" &&
+            today.diff(lastRecurringDate, "days") >= 1
+          ) {
+            // Create a new daily task
+            taskCopy.date = today.format("YYYY-MM-DD");
+            taskCopy.lastRecurringDate = today.toDate();
+            taskCopy.completed = false;
+          } else if (
+            task.recurring.type === "Weekly" &&
+            today.diff(lastRecurringDate, "weeks") >= 1
+          ) {
+            // Create a new weekly task
+            taskCopy.date = today.format("YYYY-MM-DD");
+            taskCopy.lastRecurringDate = today.toDate();
+            taskCopy.completed = false;
+          } else if (
+            task.recurring.type === "Bi-Weekly" &&
+            today.diff(lastRecurringDate, "weeks") >= 2
+          ) {
+            // Create a new bi-weekly task
+            taskCopy.date = today.format("YYYY-MM-DD");
+            taskCopy.lastRecurringDate = today.toDate();
+            taskCopy.completed = false;
+          } else if (
+            task.recurring.type === "Monthly" &&
+            today.diff(lastRecurringDate, "months") >= 1
+          ) {
+            // Create a new monthly task
+            taskCopy.date = today.format("YYYY-MM-DD");
+            taskCopy.lastRecurringDate = today.toDate();
+            taskCopy.completed = false;
+          }
+
+          return taskCopy;
+        }
+        return task;
+      });
+
+      // Save updated tasks back to Firestore
+      await setDoc(userDoc, { tasks: updatedTasks }, { merge: true });
+    }
+  };
+
   // Render each task
   const renderTask = ({ item }) => (
     <View style={styles.taskItem}>
@@ -190,6 +322,14 @@ export default function MiddleScreen() {
       )}
       <View style={styles.iconContainer}>
         <Icon
+          name="repeat"
+          type="font-awesome"
+          color={item.recurring?.isRecurring ? "orange" : "grey"}
+          size={20}
+          onPress={() => openRecurringModal(item.id)}
+          containerStyle={styles.icon}
+        />
+        <Icon
           name="flag"
           type="font-awesome"
           color={
@@ -211,6 +351,7 @@ export default function MiddleScreen() {
           onPress={() => setNotification(item.id)}
           containerStyle={styles.icon}
         />
+        {/* Nov 6 - Notification implementation - Oreilly 
         {item.notificationTime && (
           <Text style={styles.notificationText}>
             {`${item.notificationTime.toLocaleTimeString([], {
@@ -218,7 +359,7 @@ export default function MiddleScreen() {
               minute: "2-digit",
             })}`}
           </Text>
-        )}
+        )}*/}
         {editingTaskId === item.id ? (
           <Icon
             name="check"
@@ -283,11 +424,18 @@ export default function MiddleScreen() {
       </View>
       {/* Display Tasks for Selected Day */}
       {tasks.length > 0 ? (
-        <FlatList
-          data={tasks}
-          keyExtractor={(item) => item.id}
-          renderItem={renderTask}
-        />
+        <View>
+          <FlatList
+            data={tasks}
+            keyExtractor={(item) => item.id}
+            renderItem={renderTask}
+          />
+          <RecurringOverlay
+            isVisible={showOverlay}
+            onClose={() => setShowOverlay(false)}
+            onSave={saveRecurringDetails}
+          />
+        </View>
       ) : (
         <Text>No tasks for {moment(selectedDate).format("dddd")}</Text>
       )}
